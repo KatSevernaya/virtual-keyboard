@@ -499,16 +499,18 @@ const engArrayCaps = new MainClass({
     signArray: keyEnCaps,
 })
 let currentLanguage = JSON.parse(localStorage.getItem("currLang"))
-console.log(currentLanguage)
-if (currentLanguage !== undefined) {
+console.log('cl', currentLanguage)
+console.log('l', language) 
+if (currentLanguage !== null) {
     language = currentLanguage
-}
+} 
 
 if (language === 'ru') {
     ruArray.buildKeyboard()
 } else if  (language === 'en') {
     engArray.buildKeyboard()
 }
+
 
 
 
