@@ -1,0 +1,19 @@
+{
+  "name": "keyboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "eslint-config-airbnb-base": "^14.2.1"
+  },
+  "devDependencies": {
+    
+    "eslint": "^7.24.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "eslint": "eslint"
+  },
+  "author": "Akhmadulina Ekaterina",
+  "license": "ISC"
+}
