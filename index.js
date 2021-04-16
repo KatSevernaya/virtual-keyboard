@@ -16,6 +16,9 @@ document.body.append(keyboardWrapper)
 let capsLockIndicator = false
 let keysPressedArray = []
 let actualIndex = 0
+let currentCursorPostion = {
+    wasOverWrapped: false
+}
 
 
 const keyRu = [ 'ё', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'Minus', 'Equal', 'Backspace',
@@ -50,19 +53,75 @@ let language = 'en'
 
 const textFormat = function toArrangeInputLessThen15signsInLine() {
     const lastBreakPosition = inputTextArea.value.lastIndexOf('\n')
-        const textLength = inputTextArea.value.length
-        const lineLength = 15
+    const textLength = inputTextArea.value.length
+    const lineLength = 8
+    const linesQuantaty = Math.ceil(inputTextArea.value.length / lineLength)
+      //-------cursor position calculation 
+            
+      let textBeforeCaret = inputTextArea.value.slice(0, inputTextArea.selectionStart)
+      let breakQuantaty = 0
+      for (let i = 0; i< textBeforeCaret.length; i++) {
+          if (textBeforeCaret[i] === '\n') {
+              breakQuantaty += 1
+          }
+      }
+      const rowsTotal = inputTextArea.value.split('\n')
+      let rowsBeforeCaret = textBeforeCaret.split('\n')
+      let rowsBeforeCaretQuantaty = rowsBeforeCaret.length
+      let cursorPosition = 0
+      for (let i = 0; i < rowsBeforeCaret.length; i++) {
+          cursorPosition = rowsBeforeCaret[i].length        
+      }
+    
+      //---------------------------------- 
+    if (currentCursorPostion.start) {
+        let signsBeforeLineEnds = lineLength - (currentCursorPostion.start - lineLength*(rowsBeforeCaretQuantaty-1))
+       
+        console.log(currentCursorPostion.wasOverWrapped,signsBeforeLineEnds)
+        if (rowsTotal[rowsBeforeCaretQuantaty-1].length < lineLength+1) {
+   
+        } 
+        if ((rowsTotal[rowsBeforeCaretQuantaty-1].length - lineLength) === 1)  {
+            
+
+                if (currentCursorPostion.wasOverWrapped === false) {
+                    inputTextArea.value = inputTextArea.value.slice(0, rowsBeforeCaretQuantaty*lineLength) + '\n' + inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength) 
+                    
+                    console.log(currentCursorPostion.wasOverWrapped,inputTextArea.value.indexOf('\n'))
+                    inputTextArea.setSelectionRange(currentCursorPostion.start, currentCursorPostion.start)
+
+                }
+                if (currentCursorPostion.wasOverWrapped === true) {
+                    console.log('strange1',inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength+1, rowsBeforeCaretQuantaty*lineLength+2), inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength+2, rowsBeforeCaretQuantaty*lineLength+3))
+
+                         inputTextArea.value = inputTextArea.value.slice(0, rowsBeforeCaretQuantaty*lineLength) + '\n'  + inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength, rowsBeforeCaretQuantaty*lineLength+1) + inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength+2)
+                         inputTextArea.setSelectionRange(currentCursorPostion.start, currentCursorPostion.start)
+                        console.log('strange2',inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength+1, rowsBeforeCaretQuantaty*lineLength+2), inputTextArea.value.slice(rowsBeforeCaretQuantaty*lineLength+2, rowsBeforeCaretQuantaty*lineLength+3))
+                }
+                currentCursorPostion.wasOverWrapped = true
+
+               
+            } 
+        
+    }   else {
         if (lastBreakPosition === -1) {
             if (textLength >= lineLength) {
                 inputTextArea.value = inputTextArea.value + '\n'  
             }
         } else 
-        { if (textLength - lastBreakPosition > lineLength)  
-            {
-                inputTextArea.value = inputTextArea.value + '\n'
-            }
-        }   
-}  
+            { if (textLength - lastBreakPosition > lineLength)  
+                {
+                    inputTextArea.value = inputTextArea.value + '\n'
+                }
+        }
+    } 
+} 
+let arrowPressed = function putSignOnRigthPlaceIfArrowPressed(key) {
+    inputTextArea.value =inputTextArea.value.slice(0, currentCursorPostion.start) + key + inputTextArea.value.slice(currentCursorPostion.start, inputTextArea.value.length-1)
+    currentCursorPostion.start = currentCursorPostion.start+1
+    inputTextArea.setSelectionRange(currentCursorPostion.start, currentCursorPostion.start)
+    textFormat()
+}
 
 class MainClass {
     constructor(options) {
@@ -81,6 +140,9 @@ class MainClass {
                 const insertLineBreake = ['Backspace', 'DEL', 'Enter', 'ShiftRight'].indexOf(key) !== -1
                 keyboardKey.append(key)
                 keyboard.append(keyboardKey )
+                
+                
+               
                
 
                 if (insertLineBreake) {
@@ -95,7 +157,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  ' '
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Tab':
@@ -104,6 +170,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '    '
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'ControlRight':
@@ -121,6 +192,8 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '\n'
+                            textFormat()
+                            
                         })
                     break
             
@@ -128,10 +201,35 @@ class MainClass {
                         keyboardKey.classList.add('backspace')
                         keyboardKey.addEventListener('click', () => {
                             let newValue = []
-                            for (let i = 0; i < inputTextArea.value.length-1; i++) { 
-                                newValue.push(inputTextArea.value[i])
+                            inputTextArea.focus()
+                            
+                            //inputTextArea.setSelectionRange(currentCursorPostion.start, currentCursorPostion.start)
+                             //-------cursor position calculation 
+            
+                        let textBeforeCaret = inputTextArea.value.slice(0, inputTextArea.selectionStart)
+                        let breakQuantaty = 0
+                        for (let i = 0; i< textBeforeCaret.length; i++) {
+                            if (textBeforeCaret[i] === '\n') {
+                                breakQuantaty += 1
                             }
-                            inputTextArea.value = newValue.join('')
+                        }
+                        const rowsTotal = inputTextArea.value.split('\n')
+                        let rowsBeforeCaret = textBeforeCaret.split('\n')
+                        let cursorPosition = 0
+                        for (let i = 0; i < rowsBeforeCaret.length; i++) {
+                            cursorPosition = rowsBeforeCaret[i].length        
+                        }
+            
+                        //---------------------------------- 
+                            
+                          
+                            inputTextArea.value = inputTextArea.value.slice(0,currentCursorPostion.start-1) + inputTextArea.value.slice(currentCursorPostion.start)
+                            currentCursorPostion.start = currentCursorPostion.start-1
+                            inputTextArea.setSelectionRange(currentCursorPostion.start, currentCursorPostion.start)
+                            
+                               
+                                
+                            
                         })
                     break
                     case 'Delete': 
@@ -253,8 +351,10 @@ class MainClass {
             
                                 if (cursorPosition > rowsTotal[breakQuantaty - 1].length) {
                                     inputTextArea.setSelectionRange(higherCaretPositionPreviosLineLess - 1, higherCaretPositionPreviosLineLess -1)
+                                    currentCursorPostion.start = higherCaretPositionPreviosLineLess - 1
                                 } else {
                                 inputTextArea.setSelectionRange(higherCaretPosition - 1, higherCaretPosition -1)
+                                currentCursorPostion.start = higherCaretPosition - 1
                                 }
                             }
                         })
@@ -281,6 +381,7 @@ class MainClass {
                         for (let i = 0; i < rowsBeforeCaret.length; i++) {
                             cursorPosition = rowsBeforeCaret[i].length        
                         }
+    
             
                         //---------------------------------- 
             
@@ -289,8 +390,10 @@ class MainClass {
                                 const LowerCaretPositinNextLineLess = textBeforeCaret.length + rowsTotal[breakQuantaty].length - cursorPosition + rowsTotal[breakQuantaty+1].length
                                 if (cursorPosition > rowsTotal[breakQuantaty+1].length) {
                                     inputTextArea.setSelectionRange( LowerCaretPositinNextLineLess + 1, LowerCaretPositinNextLineLess + 1)
+                                    currentCursorPostion.start = LowerCaretPositinNextLineLess + 1
                                 } else {
-                                    inputTextArea.setSelectionRange(lowerCaretPosition+1, lowerCaretPosition+1)   
+                                    inputTextArea.setSelectionRange(lowerCaretPosition+1, lowerCaretPosition+1)
+                                    currentCursorPostion.start = lowerCaretPosition+1   
                                 }
                             }          
                         })
@@ -301,15 +404,19 @@ class MainClass {
                         keyboardKey.innerHTML = '<i class="fas fa-arrow-right"></i>'
                         keyboardKey.addEventListener('click', () => {
                         inputTextArea.focus()
-                        inputTextArea.setSelectionRange(inputTextArea.selectionEnd+1, inputTextArea.selectionEnd+1)   
+                        inputTextArea.setSelectionRange(inputTextArea.selectionEnd+1, inputTextArea.selectionEnd+1)
+                        currentCursorPostion.start = inputTextArea.selectionEnd+1 
                         })
                     break
                     case 'ArrowLeft':
+                        
                         keyboardKey.classList.add('dark')
                         keyboardKey.innerHTML = '<i class="fas fa-arrow-left"></i>'
                         keyboardKey.addEventListener('click', () => {
                         inputTextArea.focus()
                         inputTextArea.setSelectionRange(inputTextArea.selectionStart, inputTextArea.selectionStart-1)
+                        currentCursorPostion.start = inputTextArea.selectionStart
+                        console.log(currentCursorPostion.start )
                         })
                     break
                    
@@ -327,7 +434,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '-'
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Equal':
@@ -335,7 +446,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '='
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'BracketLeft':
@@ -343,7 +458,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '['
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'BracketRight':
@@ -351,7 +470,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  ']'
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Backslash':
@@ -359,7 +482,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '\ '
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Semicolon':
@@ -367,7 +494,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  ';'
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Quote':
@@ -375,7 +506,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value += "'"
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Comma':
@@ -383,7 +518,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  ','
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Period':
@@ -391,7 +530,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '.'
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Slash':
@@ -399,7 +542,11 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  '/'
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
                     case 'Backquote':
@@ -407,23 +554,32 @@ class MainClass {
                         keyboardKey.addEventListener('click', () => {
                             inputTextArea.focus()
                             inputTextArea.value +=  "`"
-                            textFormat()
+                            if (currentCursorPostion.start) {
+                                arrowPressed(key)
+                            } else {
+                                textFormat()
+                            }
                         })
                     break
 
                     default:   
                     keyboardKey.addEventListener('click', () => {
-
                         inputTextArea.focus()
                         inputTextArea.value += capsLockIndicator ? key.toUpperCase() : key.toLowerCase()
-                        textFormat() 
-
+                        if (currentCursorPostion.start) {
+                            arrowPressed(key)
+                        } else {
+                            textFormat()
+                        }
+                         
+                       
                     })
                 } 
 
                 keyboardKey.onclick = () => {
+                    
+                    
                     function animate({timing, draw, duration}) {
-
                         let start = performance.now()
                         requestAnimationFrame(function animate(time) {
                             let timeFraction = (time - start) / duration
@@ -499,8 +655,7 @@ const engArrayCaps = new MainClass({
     signArray: keyEnCaps,
 })
 let currentLanguage = JSON.parse(localStorage.getItem("currLang"))
-console.log('cl', currentLanguage)
-console.log('l', language) 
+
 if (currentLanguage !== null) {
     language = currentLanguage
 } 
