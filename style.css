@@ -2,11 +2,12 @@ body {
     background: rgb(255, 196, 245);
 }
 .keyboard__input {
+    display: block;
     background: rgb(255, 233, 251);
     border: none;
     min-height: 100px;
     width: 840px;
-    margin: 20px;
+    margin: 20px auto;
     padding: 30px;
     font-size: 18px;
     line-height: 24px;
@@ -16,18 +17,25 @@ body {
     outline: gray;
 } */
 .keyboard__keys {
+    display: block;
     list-style: none;
     background: rgba(0, 0, 0, .3);
     padding: 20px;
-    margin: 20px;
+    margin: 20px auto;
     width: 860px;
     
     /* display: flex; */
     /* flex-wrap: wrap; */
 }
+article {
+    display: block;
+    margin: 20px auto;
+    width: 900px;
+    padding: 0;
+}
 h5 {
     color: gray;
-    margin-left: 20px;
+    margin-left: 0;
 }
 .keyboard__item {
     display: inline-flex;
